@@ -1,0 +1,49 @@
+# Create EC2
+#Create Securiry Group
+# Create KeyPair
+# Download the keypair
+---
+- hosts: localhost
+  tasks:
+    - name: Create Security Group
+      ec2_group:
+        aws_access_key: AKIAIKCW6DYJW3XIONMQ
+        aws_secret_key: 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
+        name: websg
+        description: Create websg and allow port 80 and 22
+        region: us-east-1
+        state: present
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0 
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+    - name: Create Key KeyPair
+      ec2_key:
+        name: webkey
+        aws_access_key: AKIAIKCW6DYJW3XIONMQ
+        aws_secret_key: 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
+        description: key pair is  created
+        region: us-east-1
+        state: present
+      register: mykey
+    - name: Download the key
+      copy:
+        content: {{ mykey.key.private_key}}
+        dest: /root/webkey
+        mode: 600
+      when: mykey.changed
+    -name: create EC2 Instance
+     ec2:
+      aws_access_key: AKIAIKCW6DYJW3XIONMQ
+      aws_secret_key: 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
+      region: us-east-1
+      image: ami-467ca739
+      count: 1
+      instance_type: t2.micro
+      group: websg
+      key_name: webkey
